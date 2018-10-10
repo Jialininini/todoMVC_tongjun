@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Template • TodoMVC</title>
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <!-- CSS overrides - remove if you don't need it -->
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body ng-app="todoMVC">
+<section class="todoapp" ng-controller="ctrl">
+    <header class="header">
+        <h1>todos</h1>
+        <form ng-submit="enter();">
+            <input class="new-todo" placeholder="What needs to be done?" autofocus ng-model="msg">
+        </form>
+    </header>
+    <section class="main">
+        <input class="toggle-all" type="checkbox">
+        <label for="toggle-all">Mark all as complete</label>
+        <ul class="todo-list">
+            <li ng-repeat="todo in todos">
+                <div class="view">
+                    <input class="toggle" type="checkbox" ng-click="do(todo._id);" ng-checked="false">
+                    <label>{{todo.msg}}</label>
+                    <button class="destroy" ng-click="destroy('undo',todo._id);"></button>
+                </div>
+                <input class="edit" value="Rule the web">
+            </li>
+            <li>
+                <h5>已完成</h5>
+            </li>
+            <li class="completed" ng-repeat="done in dones">
+                <div class="view">
+                    <input class="toggle" type="checkbox" checked>
+                    <label>{{done.msg}}</label>
+                    <button class="destroy" ng-click="destroy('done',done._id);"></button>
+                </div>
+                <input class="edit" value="Create a TodoMVC template">
+            </li>
+        </ul>
+    </section>
+    <footer class="footer">
+        <span class="todo-count"><strong>{{num}}</strong> item left</span>
+        <button class="clear-completed" ng-click="clear();">Clear completed</button>
+    </footer>
+</section>
+<footer class="info">
+    <p>Double-click to edit a todo</p>
+    <p>Template by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
+    <p>Created by <a href="http://todomvc.com">you</a></p>
+    <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+</footer>
+<!-- <script src="js/base.js"></script>
+<script src="js/app.js"></script> -->
+</body>
+<script src="/js/angular.min.js"></script>
+<script>
+    var todo = angular.module("todoMVC",[]);
+    todo.run(["$rootScope","$http",function($rootScope,$http){
+        $http({
+            url: "/load"
+        }).success(function(result){
+            $rootScope.todos = result.undo;//将返回的对象数组绑定到todos上
+            $rootScope.dones = result.done;//将返回的对象数组绑定到todos上
+        });
+    }]);
+    todo.controller("ctrl",["$scope","$http",function($scope,$http){
+        $scope.enter = function(){
+            //获取输入框的数据,发送给后台
+            var data = $scope.msg;
+            if ($scope.msg==undefined || $scope.msg=="") {return;}
+            $http({
+                url: "/tijiao",
+                params: {msg:data}
+            }).success(function(result){
+                $scope.todos = result;//将返回的对象数组绑定到todos上
+                $scope.msg = "";
+            });
+        }
+
+        $scope.do = function(id){
+            //发送请求,根据传入的id到数据库中进行修改
+            //在undo集合中删除数据,在done中添加数据
+//            console.log(id);
+            $http({
+                url: "/done",
+                params: {id:id}
+            }).success(function(result){
+                console.log(result);
+                window.location.href = "/";
+            });
+        }
+
+        $scope.destroy = function(col,id){
+            console.log(col);
+            $http({
+                url: "/del",
+                params:{col:col,id:id}
+            }).success(function(result){
+                window.location.href = "/";
+            });
+        }
+
+        $scope.clear = function(){
+            $http({
+                url: "/clear"
+            }).success(function(result){
+                window.location.href = "/";
+            });
+        }
+
+    }]);
+</script>
+</html>
